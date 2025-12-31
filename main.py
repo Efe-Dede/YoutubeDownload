@@ -88,7 +88,7 @@ class YoutubeDownloaderApp(ctk.CTk):
         # URL Entry
         self.url_entry = ctk.CTkEntry(
             self.input_parent, 
-            placeholder_text="YouTube video bağlantısını yapıştırın...", 
+            placeholder_text="YouTube bağlantısı veya video ismi yazın...", 
             height=54, 
             fg_color=THEME["input_bg"], 
             border_color="#2D333B", 
@@ -169,13 +169,109 @@ class YoutubeDownloaderApp(ctk.CTk):
 
     # --- LOGIC ---
 
-    def start_download_thread(self):
-        url = self.url_entry.get()
-        if not url: return
-        self.go_btn.configure(state="disabled", text="İşleniyor...")
-        self.status.configure(text="Bağlantı analiz ediliyor...", text_color=THEME["accent"])
+    def is_youtube_url(self, text):
+        """Check if the input is a valid YouTube URL"""
+        youtube_patterns = [
+            r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/',
+            r'(https?://)?(www\.)?youtu\.be/'
+        ]
+        return any(re.match(pattern, text) for pattern in youtube_patterns)
+
+    def search_and_confirm(self, query):
+        """Search YouTube and show confirmation dialog"""
+        try:
+            # Search for the video
+            search_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': True,
+                'default_search': 'ytsearch1',
+            }
+            
+            with YoutubeDL(search_opts) as ydl:
+                result = ydl.extract_info(f"ytsearch1:{query}", download=False)
+                
+                if not result or 'entries' not in result or not result['entries']:
+                    self.after(0, lambda: self.show_error("Video bulunamadı"))
+                    return None
+                
+                video = result['entries'][0]
+                video_url = f"https://www.youtube.com/watch?v={video['id']}"
+                
+                # Get detailed info
+                info_opts = {
+                    'quiet': True,
+                    'no_warnings': True,
+                }
+                
+                with YoutubeDL(info_opts) as ydl_info:
+                    video_info = ydl_info.extract_info(video_url, download=False)
+                    
+                    title = video_info.get('title', 'Bilinmeyen')
+                    channel = video_info.get('uploader', 'Bilinmeyen')
+                    duration = video_info.get('duration', 0)
+                    
+                    # Format duration
+                    minutes = duration // 60
+                    seconds = duration % 60
+                    duration_str = f"{minutes}:{seconds:02d}"
+                    
+                    # Show confirmation dialog
+                    msg = f"Video Bulundu:\n\n"
+                    msg += f"Başlık: {title}\n"
+                    msg += f"Kanal: {channel}\n"
+                    msg += f"Süre: {duration_str}\n\n"
+                    msg += f"Bu videoyu indirmek istiyor musunuz?"
+                    
+                    # Use after to show messagebox in main thread
+                    self.confirmation_result = None
+                    self.after(0, lambda: self.show_confirmation(msg, video_url))
+                    
+                    return video_url
+                    
+        except Exception as e:
+            self.after(0, lambda err=str(e): self.show_error(f"Arama hatası: {err}"))
+            return None
+
+    def show_confirmation(self, message, video_url):
+        """Show confirmation dialog and start download if approved"""
+        from tkinter import messagebox
+        result = messagebox.askyesno("Video Onayı", message)
+        
+        if result:
+            # User confirmed, start download
+            self.status.configure(text="İndirme başlatılıyor...", text_color=THEME["accent"])
+            threading.Thread(target=self.download_core, args=(video_url,), daemon=True).start()
+        else:
+            # User cancelled
+            self.go_btn.configure(state="normal", text="İndirmeyi Başlat")
+            self.status.configure(text="İndirme iptal edildi", text_color=THEME["text_dim"])
+            self.bar.set(0)
+
+    def show_error(self, message):
+        """Show error message"""
+        self.go_btn.configure(state="normal", text="İndirmeyi Başlat")
+        self.status.configure(text="Hata Oluştu", text_color=THEME["error"])
+        messagebox.showerror("Hata", message)
         self.bar.set(0)
-        threading.Thread(target=self.download_core, args=(url,), daemon=True).start()
+
+    def start_download_thread(self):
+        url_or_query = self.url_entry.get().strip()
+        if not url_or_query: return
+        
+        self.go_btn.configure(state="disabled", text="İşleniyor...")
+        self.status.configure(text="Analiz ediliyor...", text_color=THEME["accent"])
+        self.bar.set(0)
+        
+        # Check if it's a URL or search query
+        if self.is_youtube_url(url_or_query):
+            # Direct URL - download immediately
+            self.status.configure(text="Bağlantı analiz ediliyor...", text_color=THEME["accent"])
+            threading.Thread(target=self.download_core, args=(url_or_query,), daemon=True).start()
+        else:
+            # Search query - search and confirm
+            self.status.configure(text="YouTube'da aranıyor...", text_color=THEME["accent"])
+            threading.Thread(target=self.search_and_confirm, args=(url_or_query,), daemon=True).start()
 
     def progress_hook(self, d):
         if not self._alive: return
@@ -201,13 +297,22 @@ class YoutubeDownloaderApp(ctk.CTk):
         qual = self.quality_var.get()
         out_path = str(Path.home() / "Downloads")
         
-        fmt = "best"
+        # Default format: ensure both video and audio are downloaded
+        fmt = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best"
         audio_only = "Ses" in qual
-        if "2160p" in qual: fmt = "bestvideo[height<=2160]+bestaudio/best"
-        elif "1440p" in qual: fmt = "bestvideo[height<=1440]+bestaudio/best"
-        elif "1080p" in qual: fmt = "bestvideo[height<=1080]+bestaudio/best"
-        elif "720p" in qual: fmt = "bestvideo[height<=720]+bestaudio/best"
-        elif "Ses" in qual: fmt = "bestaudio/best"
+        
+        if "2160p" in qual: 
+            fmt = "bestvideo[height<=2160][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=2160]+bestaudio/best"
+        elif "1440p" in qual: 
+            fmt = "bestvideo[height<=1440][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1440]+bestaudio/best"
+        elif "1080p" in qual: 
+            fmt = "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best"
+        elif "720p" in qual: 
+            fmt = "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best"
+        elif "480p" in qual:
+            fmt = "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=480]+bestaudio/best"
+        elif "Ses" in qual: 
+            fmt = "bestaudio/best"
 
         opts = {
             'outtmpl': os.path.join(out_path, '%(title)s.%(ext)s'),
@@ -220,7 +325,12 @@ class YoutubeDownloaderApp(ctk.CTk):
         if audio_only:
             opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '320'}]
         else:
+            # Ensure video and audio are properly merged
             opts['merge_output_format'] = 'mp4'
+            opts['postprocessors'] = [{
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': 'mp4',
+            }]
 
         try:
             with YoutubeDL(opts) as ydl:
