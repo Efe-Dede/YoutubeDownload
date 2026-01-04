@@ -49,14 +49,9 @@ class YoutubeDownloaderApp(ctk.CTk):
         # Settings file path
         self.settings_file = os.path.join(os.path.expanduser("~"), ".youtube_downloader_settings.json")
         self.download_path = self.load_settings()
-        self.download_path = self.load_settings()
         self.last_downloaded_file = None
         self.current_video_info = None
         self.pending_download_url = None
-        
-        # History
-        self.history_file = os.path.join(os.path.expanduser("~"), ".youtube_downloader_history.json")
-        self.history = self.load_history()
 
         # Window Setup
         self.title("Youtube Downloader")
@@ -68,45 +63,16 @@ class YoutubeDownloaderApp(ctk.CTk):
         self.resizable(False, False)
         self.configure(fg_color=THEME["bg"])
         
-        self.configure(fg_color=THEME["bg"])
-        
         # Center grid configuration
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # TAB VIEW CONTAINER
-        self.tab_view = ctk.CTkTabview(
-            self, 
-            fg_color="transparent",
-            segmented_button_fg_color=THEME["input_bg"],
-            segmented_button_selected_color=THEME["accent"],
-            segmented_button_selected_hover_color=THEME["accent_sub"],
-            segmented_button_unselected_color=THEME["input_bg"],
-            segmented_button_unselected_hover_color=THEME["button_dark"],
-            text_color=THEME["text_main"],
-            height=60  # Increase tab button area height indirectly
-        )
-        self.tab_view.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-        
-        # Increase font size for tabs
-        self.tab_view._segmented_button.configure(
-            font=ctk.CTkFont(family="Arial", size=16, weight="bold"),
-            height=40
-        )
-        
-        self.tab_view.add("İndirici")
-        self.tab_view.add("Geçmiş")
-
-        # --- DOWNLOADER TAB ---
-        # Main Container (Centered) - Now inside Tab
-        self.main_frame = ctk.CTkFrame(self.tab_view.tab("İndirici"), fg_color="transparent")
-        self.main_frame.pack(fill="both", expand=True)
+        # Main Container (Centered)
+        self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_rowconfigure((0, 5), weight=1) # Spacer top/bottom
-
-        # --- HISTORY TAB CONFIGURATION ---
-        self.setup_history_tab()
 
         # 1. Header Section
 
@@ -740,200 +706,9 @@ class YoutubeDownloaderApp(ctk.CTk):
             # Show in-app completion card
             if self.last_downloaded_file and os.path.exists(self.last_downloaded_file):
                 self.show_completion_card(self.last_downloaded_file)
-                self.add_to_history(self.current_video_info, self.last_downloaded_file)
         else:
             self.status.configure(text="Hata Oluştu", text_color=THEME["error"])
             messagebox.showerror("Hata", f"İşlem başarısız: {err}")
-
-    # --- HISTORY MANAGEMENT ---
-
-    def load_history(self):
-        """Load history from json file"""
-        try:
-            if os.path.exists(self.history_file):
-                with open(self.history_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        except: pass
-        return []
-
-    def save_history(self):
-        """Save history to json file"""
-        try:
-            with open(self.history_file, 'w', encoding='utf-8') as f:
-                json.dump(self.history, f, indent=2, ensure_ascii=False)
-        except: pass
-
-    def add_to_history(self, info, filepath):
-        """Add completed download to history"""
-        if not info: return
-        
-        item = {
-            'id': info.get('id', ''),
-            'title': info.get('title', 'Bilinmeyen Video'),
-            'uploader': info.get('uploader', 'Bilinmeyen Kanal'),
-            'filepath': filepath,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M"),
-            'url': info.get('webpage_url', '')
-        }
-        
-        # Add to beginning of list
-        self.history.insert(0, item)
-        # Keep last 50 items
-        if len(self.history) > 50:
-            self.history = self.history[:50]
-            
-        self.save_history()
-        self.update_history_ui()
-
-    def delete_from_history(self, item):
-        """Remove item from history"""
-        if item in self.history:
-            self.history.remove(item)
-            self.save_history()
-            self.update_history_ui()
-
-    def setup_history_tab(self):
-        """Initialize history tab layout"""
-        self.history_container = ctk.CTkFrame(self.tab_view.tab("Geçmiş"), fg_color="transparent")
-        self.history_container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Header for History
-        header_frame = ctk.CTkFrame(self.history_container, fg_color="transparent")
-        header_frame.pack(fill="x", pady=(0, 10))
-        
-        title = ctk.CTkLabel(
-            header_frame, 
-            text="İndirme Geçmişi", 
-            font=ctk.CTkFont(size=20, weight="bold"),
-            text_color=THEME["text_main"]
-        )
-        title.pack(side="left")
-        
-        clear_btn = ctk.CTkButton(
-            header_frame,
-            text="Geçmişi Temizle",
-            command=self.clear_history,
-            height=30,
-            width=100,
-            fg_color=THEME["button_dark"],
-            hover_color=THEME["error"],
-            font=ctk.CTkFont(size=12)
-        )
-        clear_btn.pack(side="right")
-        
-        # Scrollable list
-        self.history_list_frame = ctk.CTkScrollableFrame(
-            self.history_container,
-            fg_color="transparent"
-        )
-        self.history_list_frame.pack(fill="both", expand=True)
-        
-        self.update_history_ui()
-
-    def clear_history(self):
-        """Clear all history"""
-        if not self.history: return
-        
-        result = messagebox.askyesno("Onay", "Tüm indirme geçmişi silinsin mi?")
-        if result:
-            self.history = []
-            self.save_history()
-            self.update_history_ui()
-
-    def update_history_ui(self):
-        """Refresh the history list UI"""
-        # Clear current list
-        for widget in self.history_list_frame.winfo_children():
-            widget.destroy()
-            
-        if not self.history:
-            ctk.CTkLabel(
-                self.history_list_frame,
-                text="Henüz indirme geçmişi yok.",
-                text_color=THEME["text_dim"]
-            ).pack(pady=20)
-            return
-
-        for item in self.history:
-            self.create_history_item(item)
-
-    def create_history_item(self, item):
-        """Create a UI row for a history item"""
-        row = ctk.CTkFrame(self.history_list_frame, fg_color=THEME["input_bg"], corner_radius=10)
-        row.pack(fill="x", pady=5)
-        
-        # Icon
-        ctk.CTkLabel(
-            row, 
-            text="🎬", 
-            font=ctk.CTkFont(size=20)
-        ).pack(side="left", padx=15, pady=15)
-        
-        # Info
-        info_frame = ctk.CTkFrame(row, fg_color="transparent")
-        info_frame.pack(side="left", fill="both", expand=True, pady=10)
-        
-        title = item.get('title', 'Video')
-        if len(title) > 50: title = title[:50] + "..."
-        
-        ctk.CTkLabel(
-            info_frame,
-            text=title,
-            font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=THEME["text_main"],
-            anchor="w"
-        ).pack(fill="x")
-        
-        ctk.CTkLabel(
-            info_frame,
-            text=f"{item.get('uploader', '')} • {item.get('timestamp', '')}",
-            font=ctk.CTkFont(size=12),
-            text_color=THEME["text_dim"],
-            anchor="w"
-        ).pack(fill="x")
-        
-        # Actions
-        actions_frame = ctk.CTkFrame(row, fg_color="transparent")
-        actions_frame.pack(side="right", padx=10)
-        
-        # Open file button
-        if os.path.exists(item.get('filepath', '')):
-            ctk.CTkButton(
-                actions_frame,
-                text="📂",
-                width=40,
-                height=30,
-                fg_color=THEME["button_dark"],
-                hover_color=THEME["accent"],
-                command=lambda p=item['filepath']: self.open_file_location(p)
-            ).pack(side="left", padx=2)
-        
-        # Open URL button
-        ctk.CTkButton(
-            actions_frame,
-            text="🔗",
-            width=40,
-            height=30,
-            fg_color=THEME["button_dark"],
-            hover_color=THEME["accent"],
-            command=lambda u=item['url']: self.open_url(u)
-        ).pack(side="left", padx=2)
-        
-        # Delete button
-        ctk.CTkButton(
-            actions_frame,
-            text="✕",
-            width=40,
-            height=30,
-            fg_color=THEME["button_dark"],
-            hover_color=THEME["error"],
-            command=lambda i=item: self.delete_from_history(i)
-        ).pack(side="left", padx=2)
-
-    def open_url(self, url):
-        """Open youtube video in browser"""
-        import webbrowser
-        webbrowser.open(url)
 
     def open_file_location(self, filepath):
         """Open file location and select the file"""
