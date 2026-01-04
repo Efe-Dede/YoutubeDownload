@@ -28,18 +28,23 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-# --- PREMIUM MINIMALIST DESIGN ---
+# --- MODERN ELEGANT DESIGN ---
 ctk.set_appearance_mode("Dark")
 THEME = {
-    "bg": "#0B0E14",         
-    "accent": "#0095FF",     
-    "accent_sub": "#0077CC", 
-    "text_main": "#E1E7EF", 
-    "text_dim": "#718096",
-    "success": "#22C55E",
-    "error": "#EF4444",
-    "input_bg": "#151921",
-    "button_dark": "#1E232E"
+    "bg": "#0A0E1A",              # Deep midnight blue-black
+    "accent": "#6366F1",          # Modern indigo
+    "accent_hover": "#4F46E5",   # Deeper indigo
+    "accent_gradient": "#8B5CF6", # Purple accent for gradients
+    "text_main": "#F1F5F9",      # Soft white
+    "text_dim": "#94A3B8",       # Muted slate
+    "success": "#10B981",        # Modern emerald
+    "success_hover": "#059669",  # Deeper emerald
+    "error": "#EF4444",          # Keep modern red
+    "input_bg": "#1E293B",       # Slate 800
+    "card_bg": "#1E293B",        # Rich slate
+    "card_border": "#334155",    # Slate 700
+    "button_dark": "#334155",    # Slate 700
+    "button_hover": "#475569"    # Slate 600
 }
 
 class YoutubeDownloaderApp(ctk.CTk):
@@ -59,7 +64,7 @@ class YoutubeDownloaderApp(ctk.CTk):
             self.iconbitmap(resource_path("icon.ico"))
         except:
             pass
-        self.geometry("850x750")
+        self.geometry("920x780")
         self.resizable(False, False)
         self.configure(fg_color=THEME["bg"])
         
@@ -83,18 +88,18 @@ class YoutubeDownloaderApp(ctk.CTk):
         self.header_label = ctk.CTkLabel(
             self.header_frame, 
             text="Youtube Downloader", 
-            font=ctk.CTkFont(family="Arial", size=32, weight="bold"),
-            text_color=THEME["accent"]
+            font=ctk.CTkFont(family="Segoe UI", size=36, weight="bold"),
+            text_color=THEME["text_main"]
         )
         self.header_label.pack()
         
         self.subheader_label = ctk.CTkLabel(
             self.header_frame, 
-            text="", 
-            font=ctk.CTkFont(family="Arial", size=13, weight="normal"),
+            text="Modern video indirme deneyimi", 
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="normal"),
             text_color=THEME["text_dim"]
         )
-        self.subheader_label.pack(pady=(2, 0))
+        self.subheader_label.pack(pady=(5, 0))
 
         # 2. Input Section
         self.input_parent = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -105,16 +110,16 @@ class YoutubeDownloaderApp(ctk.CTk):
         self.url_entry = ctk.CTkEntry(
             self.input_parent, 
             placeholder_text="YouTube bağlantısı veya video ismi yazın...", 
-            height=54, 
+            height=56, 
             fg_color=THEME["input_bg"], 
-            border_color="#2D333B", 
-            border_width=1,
-            corner_radius=14,
-            font=ctk.CTkFont(size=14),
+            border_color=THEME["card_border"], 
+            border_width=2,
+            corner_radius=16,
+            font=ctk.CTkFont(family="Segoe UI", size=14),
             placeholder_text_color=THEME["text_dim"],
             text_color=THEME["text_main"]
         )
-        self.url_entry.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 16))
+        self.url_entry.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 18))
 
         # Controls Row
         self.controls_frame = ctk.CTkFrame(self.input_parent, fg_color="transparent")
@@ -128,36 +133,36 @@ class YoutubeDownloaderApp(ctk.CTk):
             self.controls_frame, 
             values=self.qualities, 
             variable=self.quality_var,
-            height=50, 
-            fg_color=THEME["input_bg"],
-            border_color="#2D333B",
+            height=52, 
+            fg_color=THEME["card_bg"],
+            border_color=THEME["card_border"],
             button_color=THEME["button_dark"],
-            button_hover_color=THEME["accent_sub"],
-            border_width=1,
-            corner_radius=12,
-            font=ctk.CTkFont(size=14, weight="bold"),
-            dropdown_font=ctk.CTkFont(size=14),
-            dropdown_fg_color=THEME["input_bg"],
+            button_hover_color=THEME["button_hover"],
+            border_width=2,
+            corner_radius=14,
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="normal"),
+            dropdown_font=ctk.CTkFont(family="Segoe UI", size=13),
+            dropdown_fg_color=THEME["card_bg"],
             dropdown_hover_color=THEME["button_dark"],
             dropdown_text_color=THEME["text_main"],
             text_color=THEME["text_main"],
-            state="readonly"  # Kullanıcı elle değiştiremez/silemez
+            state="readonly"
         )
-        self.quality_menu.grid(row=0, column=0, sticky="ew", padx=(0, 8))
+        self.quality_menu.grid(row=0, column=0, sticky="ew", padx=(0, 10))
 
         # Action Button
         self.go_btn = ctk.CTkButton(
             self.controls_frame, 
             text="İndirmeyi Başlat", 
             command=self.start_download_thread, 
-            height=50, 
+            height=52, 
             fg_color=THEME["accent"], 
-            hover_color=THEME["accent_sub"], 
-            font=ctk.CTkFont(size=14, weight="bold"),
-            corner_radius=12,
+            hover_color=THEME["accent_hover"], 
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
+            corner_radius=14,
             text_color="#FFFFFF"
         )
-        self.go_btn.grid(row=0, column=1, sticky="ew", padx=(8, 0))
+        self.go_btn.grid(row=0, column=1, sticky="ew", padx=(10, 0))
 
         # 2.5. Download Location Section
         self.location_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -168,11 +173,11 @@ class YoutubeDownloaderApp(ctk.CTk):
         self.location_label = ctk.CTkLabel(
             self.location_frame,
             text="İndirme Konumu:",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="normal"),
             text_color=THEME["text_dim"],
             anchor="w"
         )
-        self.location_label.grid(row=0, column=0, sticky="w", pady=(0, 8))
+        self.location_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
 
         # Location display and buttons
         self.location_controls = ctk.CTkFrame(self.location_frame, fg_color="transparent")
@@ -182,16 +187,16 @@ class YoutubeDownloaderApp(ctk.CTk):
         # Path display
         self.path_display = ctk.CTkEntry(
             self.location_controls,
-            height=42,
-            fg_color=THEME["input_bg"],
-            border_color="#2D333B",
-            border_width=1,
-            corner_radius=10,
-            font=ctk.CTkFont(size=12),
+            height=46,
+            fg_color=THEME["card_bg"],
+            border_color=THEME["card_border"],
+            border_width=2,
+            corner_radius=12,
+            font=ctk.CTkFont(family="Segoe UI", size=12),
             text_color=THEME["text_main"],
             state="readonly"
         )
-        self.path_display.grid(row=0, column=0, sticky="ew", padx=(0, 8))
+        self.path_display.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         self.update_path_display()
 
         # Browse button
@@ -199,27 +204,27 @@ class YoutubeDownloaderApp(ctk.CTk):
             self.location_controls,
             text="📁 Gözat",
             command=self.browse_folder,
-            height=42,
-            width=100,
+            height=46,
+            width=110,
             fg_color=THEME["button_dark"],
-            hover_color=THEME["accent_sub"],
-            font=ctk.CTkFont(size=12, weight="bold"),
-            corner_radius=10,
+            hover_color=THEME["button_hover"],
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="normal"),
+            corner_radius=12,
             text_color=THEME["text_main"]
         )
-        self.browse_btn.grid(row=0, column=1, padx=(0, 8))
+        self.browse_btn.grid(row=0, column=1, padx=(0, 10))
 
         # Open folder button
         self.open_folder_btn = ctk.CTkButton(
             self.location_controls,
             text="📂 Aç",
             command=self.open_download_folder,
-            height=42,
-            width=80,
+            height=46,
+            width=90,
             fg_color=THEME["button_dark"],
-            hover_color=THEME["accent_sub"],
-            font=ctk.CTkFont(size=12, weight="bold"),
-            corner_radius=10,
+            hover_color=THEME["button_hover"],
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="normal"),
+            corner_radius=12,
             text_color=THEME["text_main"]
         )
         self.open_folder_btn.grid(row=0, column=2)
@@ -238,18 +243,18 @@ class YoutubeDownloaderApp(ctk.CTk):
         self.status = ctk.CTkLabel(
             self.status_frame, 
             text="İndirme yapmak için hazırım", 
-            font=ctk.CTkFont(size=13), 
+            font=ctk.CTkFont(family="Segoe UI", size=13), 
             text_color=THEME["text_dim"]
         )
-        self.status.pack(pady=(0, 10))
+        self.status.pack(pady=(0, 12))
         
         self.bar = ctk.CTkProgressBar(
             self.status_frame, 
-            width=500, 
-            height=6, 
+            width=550, 
+            height=8, 
             progress_color=THEME["accent"], 
-            fg_color=THEME["button_dark"], 
-            corner_radius=3
+            fg_color=THEME["card_bg"], 
+            corner_radius=4
         )
         self.bar.pack()
         self.bar.set(0)
@@ -341,10 +346,10 @@ class YoutubeDownloaderApp(ctk.CTk):
         # Create card frame
         self.preview_card = ctk.CTkFrame(
             self.card_container,
-            fg_color=THEME["input_bg"],
-            corner_radius=16,
-            border_width=1,
-            border_color="#2D333B"
+            fg_color=THEME["card_bg"],
+            corner_radius=20,
+            border_width=2,
+            border_color=THEME["card_border"]
         )
         self.preview_card.grid(row=0, column=0, sticky="ew", pady=(0, 0))
         self.preview_card.grid_columnconfigure(1, weight=1)
@@ -396,23 +401,23 @@ class YoutubeDownloaderApp(ctk.CTk):
         title_label = ctk.CTkLabel(
             info_frame,
             text=title,
-            font=ctk.CTkFont(size=15, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=16, weight="bold"),
             text_color=THEME["text_main"],
             anchor="w",
             justify="left"
         )
-        title_label.grid(row=0, column=0, sticky="w", pady=(0, 8))
+        title_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
 
         # Channel
         channel = video_info.get('uploader', 'Bilinmeyen')
         channel_label = ctk.CTkLabel(
             info_frame,
             text=f"📺 {channel}",
-            font=ctk.CTkFont(size=12),
+            font=ctk.CTkFont(family="Segoe UI", size=13),
             text_color=THEME["text_dim"],
             anchor="w"
         )
-        channel_label.grid(row=1, column=0, sticky="w", pady=(0, 4))
+        channel_label.grid(row=1, column=0, sticky="w", pady=(0, 6))
 
         # Duration
         duration = video_info.get('duration', 0)
@@ -432,11 +437,11 @@ class YoutubeDownloaderApp(ctk.CTk):
         meta_label = ctk.CTkLabel(
             info_frame,
             text=f"⏱️ {duration_str}  •  👁️ {views_str} görüntülenme",
-            font=ctk.CTkFont(size=11),
+            font=ctk.CTkFont(family="Segoe UI", size=12),
             text_color=THEME["text_dim"],
             anchor="w"
         )
-        meta_label.grid(row=2, column=0, sticky="w", pady=(0, 16))
+        meta_label.grid(row=2, column=0, sticky="w", pady=(0, 18))
 
         # Action buttons
         button_frame = ctk.CTkFrame(info_frame, fg_color="transparent")
@@ -446,26 +451,26 @@ class YoutubeDownloaderApp(ctk.CTk):
             button_frame,
             text="✓ İndir",
             command=lambda: self.confirm_download(video_url),
-            height=36,
-            width=120,
+            height=40,
+            width=130,
             fg_color=THEME["success"],
-            hover_color="#1EA34D",
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=8,
+            hover_color=THEME["success_hover"],
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
+            corner_radius=12,
             text_color="#FFFFFF"
         )
-        confirm_btn.grid(row=0, column=0, padx=(0, 10))
+        confirm_btn.grid(row=0, column=0, padx=(0, 12))
 
         cancel_btn = ctk.CTkButton(
             button_frame,
             text="✕ İptal",
             command=self.cancel_download,
-            height=36,
-            width=100,
+            height=40,
+            width=110,
             fg_color=THEME["button_dark"],
             hover_color=THEME["error"],
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=8,
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="normal"),
+            corner_radius=12,
             text_color=THEME["text_main"]
         )
         cancel_btn.grid(row=0, column=1)
@@ -477,8 +482,8 @@ class YoutubeDownloaderApp(ctk.CTk):
         # Create card frame
         self.completion_card = ctk.CTkFrame(
             self.card_container,
-            fg_color=THEME["input_bg"],
-            corner_radius=16,
+            fg_color=THEME["card_bg"],
+            corner_radius=20,
             border_width=2,
             border_color=THEME["success"]
         )
@@ -494,18 +499,18 @@ class YoutubeDownloaderApp(ctk.CTk):
         icon_label = ctk.CTkLabel(
             content_frame,
             text="✓",
-            font=ctk.CTkFont(size=48, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=52, weight="bold"),
             text_color=THEME["success"]
         )
-        icon_label.grid(row=0, column=0, pady=(0, 10))
+        icon_label.grid(row=0, column=0, pady=(0, 12))
 
         success_label = ctk.CTkLabel(
             content_frame,
             text="İndirme Başarıyla Tamamlandı!",
-            font=ctk.CTkFont(size=18, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=19, weight="bold"),
             text_color=THEME["success"]
         )
-        success_label.grid(row=1, column=0, pady=(0, 8))
+        success_label.grid(row=1, column=0, pady=(0, 10))
 
         # Filename
         filename = os.path.basename(filepath)
@@ -514,10 +519,10 @@ class YoutubeDownloaderApp(ctk.CTk):
         file_label = ctk.CTkLabel(
             content_frame,
             text=filename,
-            font=ctk.CTkFont(size=12),
+            font=ctk.CTkFont(family="Segoe UI", size=13),
             text_color=THEME["text_dim"]
         )
-        file_label.grid(row=2, column=0, pady=(0, 20))
+        file_label.grid(row=2, column=0, pady=(0, 22))
 
         # Action buttons
         button_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
@@ -527,26 +532,26 @@ class YoutubeDownloaderApp(ctk.CTk):
             button_frame,
             text="📂 Dosyayı Göster",
             command=lambda: self.open_file_location(filepath),
-            height=40,
-            width=160,
+            height=44,
+            width=170,
             fg_color=THEME["accent"],
-            hover_color=THEME["accent_sub"],
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=10,
+            hover_color=THEME["accent_hover"],
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
+            corner_radius=12,
             text_color="#FFFFFF"
         )
-        open_file_btn.grid(row=0, column=0, padx=(0, 10))
+        open_file_btn.grid(row=0, column=0, padx=(0, 12))
 
         close_btn = ctk.CTkButton(
             button_frame,
             text="Tamam",
             command=self.hide_all_cards,
-            height=40,
-            width=100,
+            height=44,
+            width=110,
             fg_color=THEME["button_dark"],
-            hover_color=THEME["accent_sub"],
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=10,
+            hover_color=THEME["button_hover"],
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="normal"),
+            corner_radius=12,
             text_color=THEME["text_main"]
         )
         close_btn.grid(row=0, column=1)
